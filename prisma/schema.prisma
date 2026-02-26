@@ -32,3 +32,23 @@ model Post {
 
   @@map("posts")
 }
+
+model GoldPrice {
+  id           Int      @id @default(autoincrement())
+  type         String   // 'vietnam' or 'world'
+  goldType     String   // 'SJC', 'PNJ', 'DOJI', 'spot' etc.
+  buyPrice     Float?   // Mua vào
+  sellPrice    Float?   // Bán ra
+  currency     String   @default("VND")
+  source       String   // 'coingecko', 'sjc-scraping', 'pnj-scraping'
+  sourceUrl    String?  // URL nguồn gốc
+  timestamp    DateTime // Thời gian báo giá
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("gold_prices")
+  @@index([type, goldType, timestamp])
+  @@index([type, timestamp])
+  @@index([timestamp])
+  @@unique([type, goldType, source, timestamp])
+}
