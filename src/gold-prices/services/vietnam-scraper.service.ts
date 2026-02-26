@@ -1,7 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-import * as cheerio from 'cheerio';
+import { Injectable, Logger } from '@nestjs/common';
 import puppeteer from 'puppeteer';
 
 interface VNGoldPrice {

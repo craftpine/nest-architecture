@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
-import { CoingeckoService } from './services/coingecko.service';
+import { WorldGoldService } from './services/world-gold.service';
 import { VietnamScraperService } from './services/vietnam-scraper.service';
 import { CreateGoldPriceDto } from './dto/create-gold-price.dto';
 import { GoldPriceQueryDto } from './dto/gold-price-query.dto';
@@ -13,7 +13,7 @@ export class GoldPricesService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly coingecko: CoingeckoService,
+    private readonly worldGoldService: WorldGoldService,
     private readonly vietnamScraper: VietnamScraperService,
   ) {}
 
@@ -49,7 +49,7 @@ export class GoldPricesService {
   async collectWorldPrices(): Promise<number> {
     this.logger.log('Collecting world gold prices');
 
-    const goldPrice = await this.coingecko.getGoldPrice();
+    const goldPrice = await this.worldGoldService.getGoldPrice();
     if (!goldPrice) {
       this.logger.warn('No world gold price data available');
       return 0;
@@ -60,8 +60,8 @@ export class GoldPricesService {
       goldType: 'spot',
       sellPrice: goldPrice.price, // World gold is typically spot price
       currency: goldPrice.currency,
-      source: 'coingecko',
-      sourceUrl: 'https://api.coingecko.com/api/v3/simple/price?ids=gold&vs_currencies=usd',
+      source: 'world-gold-service',
+      sourceUrl: 'https://vn.investing.com/currencies/xau-usd',
       timestamp: goldPrice.timestamp,
     };
 
@@ -156,34 +156,86 @@ export class GoldPricesService {
     return goldPrices.map(this.mapToResponseDto);
   }
 
-  async findLatest(query: GoldPriceQueryDto): Promise<GoldPriceResponseDto[]> {
-    const where: any = {};
+  async findLatest(query: GoldPriceQueryDto): Promise<any> {
+    // Build WHERE clause for filtering
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
 
     if (query.type) {
-      where.type = query.type;
+      conditions.push(`type = $${paramIndex}`);
+      params.push(query.type);
+      paramIndex++;
     }
 
     if (query.goldType) {
-      where.goldType = query.goldType;
+      conditions.push(`"goldType" = $${paramIndex}`);
+      params.push(query.goldType);
+      paramIndex++;
     }
 
-    // For latest prices, get the most recent price for each unique combination
-    const goldPrices = await this.prisma.goldPrice.findMany({
-      where,
-      orderBy: { timestamp: 'desc' },
-      take: 20, // Reasonable limit for latest prices
-    });
+    if (query.source) {
+      conditions.push(`source = $${paramIndex}`);
+      params.push(query.source);
+      paramIndex++;
+    }
 
-    // Group by type and goldType, keep only the latest
-    const latestPrices = new Map<string, any>();
-    for (const price of goldPrices) {
-      const key = `${price.type}-${price.goldType}`;
-      if (!latestPrices.has(key)) {
-        latestPrices.set(key, price);
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Use window function to get 20 latest records per goldType
+    const sql = `
+      WITH ranked_prices AS (
+        SELECT
+          *,
+          ROW_NUMBER() OVER (
+            PARTITION BY type, "goldType"
+            ORDER BY timestamp DESC
+          ) AS rn
+        FROM gold_prices
+        ${whereClause}
+      )
+      SELECT
+        id, type, "goldType", "buyPrice", "sellPrice",
+        currency, source, "sourceUrl", timestamp,
+        "createdAt", "updatedAt"
+      FROM ranked_prices
+      WHERE rn <= 20
+      ORDER BY type, "goldType", timestamp DESC
+    `;
+
+    const goldPrices = await this.prisma.$queryRawUnsafe(sql, ...params);
+
+    // Group results by goldType
+    const grouped = new Map<string, any[]>();
+
+    for (const price of goldPrices as any[]) {
+      const goldType = price.goldType;
+
+      if (!grouped.has(goldType)) {
+        grouped.set(goldType, []);
       }
+
+      grouped.get(goldType)!.push({
+        id: price.id,
+        type: price.type,
+        goldType: price.goldType,
+        buyPrice: price.buyPrice,
+        sellPrice: price.sellPrice,
+        currency: price.currency,
+        source: price.source,
+        sourceUrl: price.sourceUrl,
+        timestamp: price.timestamp.toISOString(),
+        createdAt: price.createdAt.toISOString(),
+        updatedAt: price.updatedAt.toISOString(),
+      });
     }
 
-    return Array.from(latestPrices.values()).map(this.mapToResponseDto);
+    // Convert Map to array of grouped objects
+    return Array.from(grouped.entries()).map(([goldType, records]) => ({
+      goldType,
+      records,
+      count: records.length,
+    }));
   }
 
   async findOne(id: number): Promise<GoldPriceResponseDto | null> {

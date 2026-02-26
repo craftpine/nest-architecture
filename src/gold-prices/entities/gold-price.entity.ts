@@ -5,7 +5,7 @@ export class GoldPrice {
   buyPrice?: number; // Mua vào
   sellPrice?: number; // Bán ra
   currency: string; // VND, USD
-  source: string; // 'coingecko', 'sjc-scraping', 'pnj-scraping'
+  source: string; // 'world-gold-service', 'sjc-scraping', 'pnj-scraping', 'btmc-scraping', 'btmh-scraping'
   sourceUrl?: string; // URL nguồn gốc
   timestamp: Date; // Thời gian báo giá
   createdAt: Date;
