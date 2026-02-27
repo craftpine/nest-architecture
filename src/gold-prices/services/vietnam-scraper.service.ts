@@ -250,10 +250,10 @@ export class VietnamScraperService {
           const rows = table.querySelectorAll('tbody tr');
           rows.forEach((row) => {
             const cells = row.querySelectorAll('td');
-            if (cells.length >= 3) {
+            if (cells.length >= 5) {
               const goldType = cells[0]?.textContent?.trim();
-              const buyPrice = cells[1]?.textContent?.trim();
-              const sellPrice = cells[2]?.textContent?.trim();
+              const buyPrice = cells[3]?.textContent?.trim();
+              const sellPrice = cells[4]?.textContent?.trim();
 
               if (goldType && buyPrice && sellPrice) {
                 data.push({
