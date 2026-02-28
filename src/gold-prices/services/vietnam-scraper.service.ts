@@ -73,8 +73,9 @@ export class VietnamScraperService {
         const sellStr = item.sellPrice.replace(/[.,]/g, '');
 
         if (buyStr && sellStr) {
-          const buyPrice = parseInt(buyStr, 10);
-          const sellPrice = parseInt(sellStr, 10);
+          // Multiply by 1000 since prices are displayed in thousands of VND
+          const buyPrice = parseInt(buyStr, 10) * 1000;
+          const sellPrice = parseInt(sellStr, 10) * 1000;
 
           if (!isNaN(buyPrice) && !isNaN(sellPrice) && buyPrice > 0 && sellPrice > 0) {
             vnGoldPrices.push({
@@ -182,8 +183,9 @@ export class VietnamScraperService {
         const sellStr = item.sellPrice.replace(/[.,]/g, '');
 
         if (buyStr && sellStr) {
-          const buyPrice = parseInt(buyStr, 10);
-          const sellPrice = parseInt(sellStr, 10);
+          // Multiply by 1000 since prices are displayed in thousands of VND
+          const buyPrice = parseInt(buyStr, 10) * 1000;
+          const sellPrice = parseInt(sellStr, 10) * 1000;
 
           // Check if valid prices and not duplicated
           const key = `${item.goldType}-${buyPrice}-${sellPrice}`;
@@ -230,7 +232,7 @@ export class VietnamScraperService {
       });
 
       const page = await browser.newPage();
-      await page.goto('https://btmc.vn/gia-vang-theo-ngay.html', {
+      await page.goto('https://btmc.vn/', {
         waitUntil: 'networkidle2',
         timeout: 30000,
       });
@@ -250,10 +252,10 @@ export class VietnamScraperService {
           const rows = table.querySelectorAll('tbody tr');
           rows.forEach((row) => {
             const cells = row.querySelectorAll('td');
-            if (cells.length >= 5) {
+            if (cells.length >= 3) {
               const goldType = cells[0]?.textContent?.trim();
-              const buyPrice = cells[3]?.textContent?.trim();
-              const sellPrice = cells[4]?.textContent?.trim();
+              const buyPrice = cells[1]?.textContent?.trim();
+              const sellPrice = cells[2]?.textContent?.trim();
 
               if (goldType && buyPrice && sellPrice) {
                 data.push({
@@ -300,8 +302,9 @@ export class VietnamScraperService {
         const sellStr = item.sellPrice.replace(/[.,]/g, '');
 
         if (buyStr && sellStr) {
-          const buyPrice = parseInt(buyStr, 10);
-          const sellPrice = parseInt(sellStr, 10);
+          // Multiply by 1000 since prices are displayed in thousands of VND
+          const buyPrice = parseInt(buyStr, 10) * 1000;
+          const sellPrice = parseInt(sellStr, 10) * 1000;
 
           // Check if valid prices and not duplicated
           const key = `${item.goldType}-${buyPrice}-${sellPrice}`;
@@ -318,7 +321,7 @@ export class VietnamScraperService {
               buyPrice,
               sellPrice,
               source: 'btmc-scraping',
-              sourceUrl: 'https://btmc.vn/gia-vang-theo-ngay.html',
+              sourceUrl: 'https://btmc.vn/',
               timestamp: new Date(),
             });
           }
@@ -418,8 +421,9 @@ export class VietnamScraperService {
         const sellStr = item.sellPrice.replace(/[.,]/g, '');
 
         if (buyStr && sellStr) {
-          const buyPrice = parseInt(buyStr, 10);
-          const sellPrice = parseInt(sellStr, 10);
+          // Multiply by 1000 since prices are displayed in thousands of VND
+          const buyPrice = parseInt(buyStr, 10) * 1000;
+          const sellPrice = parseInt(sellStr, 10) * 1000;
 
           // Check if valid prices and not duplicated
           const key = `${item.goldType}-${buyPrice}-${sellPrice}`;

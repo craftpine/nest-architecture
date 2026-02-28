@@ -162,6 +162,13 @@ export class GoldPricesService {
     const params: any[] = [];
     let paramIndex = 1;
 
+    // Add timestamp filter for last 24 hours
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    conditions.push(`timestamp >= $${paramIndex}`);
+    params.push(twentyFourHoursAgo);
+    paramIndex++;
+
     if (query.type) {
       conditions.push(`type = $${paramIndex}`);
       params.push(query.type);
@@ -182,24 +189,14 @@ export class GoldPricesService {
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-    // Use window function to get 20 latest records per goldType
+    // Get all records from the last 24 hours
     const sql = `
-      WITH ranked_prices AS (
-        SELECT
-          *,
-          ROW_NUMBER() OVER (
-            PARTITION BY type, "goldType"
-            ORDER BY timestamp DESC
-          ) AS rn
-        FROM gold_prices
-        ${whereClause}
-      )
       SELECT
         id, type, "goldType", "buyPrice", "sellPrice",
         currency, source, "sourceUrl", timestamp,
         "createdAt", "updatedAt"
-      FROM ranked_prices
-      WHERE rn <= 20
+      FROM gold_prices
+      ${whereClause}
       ORDER BY type, "goldType", timestamp DESC
     `;
 
