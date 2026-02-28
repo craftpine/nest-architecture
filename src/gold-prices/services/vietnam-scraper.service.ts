@@ -253,11 +253,12 @@ export class VietnamScraperService {
           rows.forEach((row) => {
             const cells = row.querySelectorAll('td');
             if (cells.length >= 3) {
-              const goldType = cells[0]?.textContent?.trim();
-              const buyPrice = cells[1]?.textContent?.trim();
-              const sellPrice = cells[2]?.textContent?.trim();
+              const goldType = cells[1]?.textContent?.trim();
+              const buyPrice = cells[3]?.textContent?.trim();
+              const sellPrice = cells[4]?.textContent?.trim();
 
-              if (goldType && buyPrice && sellPrice) {
+              // Skip silver prices (bạc)
+              if (goldType && buyPrice && sellPrice && !goldType.toLowerCase().includes('bạc')) {
                 data.push({
                   goldType,
                   buyPrice,
@@ -278,11 +279,12 @@ export class VietnamScraperService {
             const typeMatch = text.match(/Vàng\s+([^\n\d]+)/i);
             const prices = text.match(/[\d.,]+/g);
 
-            if (typeMatch && prices && prices.length >= 2) {
+            // Skip silver prices (bạc)
+            if (typeMatch && prices && prices.length >= 2 && !typeMatch[1].toLowerCase().includes('bạc')) {
               data.push({
                 goldType: typeMatch[1].trim(),
-                buyPrice: prices[0],
-                sellPrice: prices[1],
+                buyPrice: prices[2],
+                sellPrice: prices[3],
               });
             }
           });
@@ -422,8 +424,8 @@ export class VietnamScraperService {
 
         if (buyStr && sellStr) {
           // Multiply by 1000 since prices are displayed in thousands of VND
-          const buyPrice = parseInt(buyStr, 10) * 1000;
-          const sellPrice = parseInt(sellStr, 10) * 1000;
+          const buyPrice = parseInt(buyStr, 10);
+          const sellPrice = parseInt(sellStr, 10);
 
           // Check if valid prices and not duplicated
           const key = `${item.goldType}-${buyPrice}-${sellPrice}`;
