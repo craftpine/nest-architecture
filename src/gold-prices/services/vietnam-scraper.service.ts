@@ -55,7 +55,7 @@ export class VietnamScraperService {
               data.push({
                 goldType,
                 buyPrice,
-                sellPrice,
+                sellPrice
               });
             }
           }
@@ -79,8 +79,8 @@ export class VietnamScraperService {
           if (!isNaN(buyPrice) && !isNaN(sellPrice) && buyPrice > 0 && sellPrice > 0) {
             vnGoldPrices.push({
               goldType: `SJC_${item.goldType.replace(/\s+/g, '_')}`,
-              buyPrice,
-              sellPrice,
+              buyPrice: Math.floor(buyPrice / 10), 
+              sellPrice: Math.floor(sellPrice / 10), 
               source: 'sjc-scraping',
               sourceUrl: 'https://sjc.com.vn/gia-vang-online',
               timestamp: new Date(),
@@ -422,7 +422,6 @@ export class VietnamScraperService {
         const sellStr = item.sellPrice.replace(/[.,]/g, '');
 
         if (buyStr && sellStr) {
-          // Multiply by 1000 since prices are displayed in thousands of VND
           const buyPrice = parseInt(buyStr, 10);
           const sellPrice = parseInt(sellStr, 10);
 
