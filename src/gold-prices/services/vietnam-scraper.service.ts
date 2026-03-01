@@ -73,9 +73,8 @@ export class VietnamScraperService {
         const sellStr = item.sellPrice.replace(/[.,]/g, '');
 
         if (buyStr && sellStr) {
-          // Multiply by 1000 since prices are displayed in thousands of VND
-          const buyPrice = parseInt(buyStr, 10) * 1000;
-          const sellPrice = parseInt(sellStr, 10) * 1000;
+          const buyPrice = parseInt(buyStr, 10);
+          const sellPrice = parseInt(sellStr, 10);
 
           if (!isNaN(buyPrice) && !isNaN(sellPrice) && buyPrice > 0 && sellPrice > 0) {
             vnGoldPrices.push({
