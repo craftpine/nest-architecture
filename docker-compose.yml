@@ -1,27 +1,27 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: nest_postgres
+
+  nestjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nest_app
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: nest_db
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/nest_db?schema=public"
+      JWT_ACCESS_TOKEN_SECRET: "your-access-secret-key-change-in-production"
+      JWT_ACCESS_TOKEN_EXPIRY: "900"
+      JWT_REFRESH_TOKEN_SECRET: "your-refresh-secret-key-change-in-production"
+      JWT_REFRESH_TOKEN_EXPIRY: "604800"
+      NODE_ENV: "production"
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - nest_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
+    restart: unless-stopped
 
 networks:
   nest_network:
