@@ -26,9 +26,6 @@ FROM node:22-alpine
 
 WORKDIR /usr/src/app
 
-# Install dumb-init to handle signals properly
-RUN apk add --no-cache dumb-init
-
 # Copy package files
 COPY package*.json ./
 
@@ -51,5 +48,4 @@ COPY --from=builder /usr/src/app/dist ./dist
 EXPOSE 3000
 
 # Run app
-ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "dist/main"]
