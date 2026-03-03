@@ -12,6 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Set dummy DATABASE_URL for Prisma generate (actual URL provided at runtime)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+
 # Generate Prisma client
 RUN npx prisma generate
 
@@ -29,8 +32,14 @@ RUN apk add --no-cache dumb-init
 # Copy package files
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Install production dependencies only
+RUN npm ci --omit=dev
+
+# Copy Prisma schema
+COPY prisma ./prisma
+
+# Set dummy DATABASE_URL for Prisma generate (actual URL provided at runtime)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
 
 # Generate Prisma client for production
 RUN npx prisma generate
